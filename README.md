@@ -8,7 +8,7 @@ This repository contains tutorials for running a fully deep learning–based pip
 
 ## 1. Clone the repository
 
-git clone https://github.com/your-username/TMB_pipeline.git
+git clone https://github.com//baker-laboratory/TMB_pipeline.git
 
 cd TMB_pipeline
 
