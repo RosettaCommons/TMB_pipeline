@@ -7,6 +7,7 @@
 #SBATCH -t 05:30:00
 #SBATCH -o runmpnn_gpu.out
 
+#script assumes you are in directory of backbones
 
 ./make_json_input_for_TMB_MPNN.py 100.0 0.25 *.pdb
 
