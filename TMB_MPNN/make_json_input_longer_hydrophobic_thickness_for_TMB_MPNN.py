@@ -1,4 +1,4 @@
-#!~ENV_DIR/modulus_latest.sif
+#!/~ENV_DIR/modulus_latest.sif
 import sys
 import json
 from pathlib import Path
