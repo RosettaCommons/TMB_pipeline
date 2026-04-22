@@ -8,7 +8,7 @@
 #SBATCH -o runmpnn_gpu.out
 
 
-/projects/TMBBs/scripts/SMscripts/make_pdb_multi_surf_cond_json.py 100.0 0.25 *.pdb
+./make_json_input_for_TMB_MPNN.py 100.0 0.25 *.pdb
 
 apptainer run --nv ~ENV_DIR/modulus_latest.sif \
 python ~/TMB_pipeline/TMB_MPNN/TMB_MPNN_code/v2.1.1/run.py \

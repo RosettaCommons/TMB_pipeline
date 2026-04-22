@@ -8,7 +8,9 @@
 #SBATCH -o runmpnn_gpu.out
 
 
-/projects/TMBBs/scripts/SMscripts/make_pdb_multi_surf_cond_json.py 100.0 0.25 *.pdb
+./make_json_input_longer_hydrophobic_thickness_for_TMB_MPNN.py 40.0 0.25 *.pdb
+
+#first input to make_json_input_longer_hydrophobic_thickness_for_TMB_MPNN.py script is the length in Angstrom of hydrophobic thickness you want to specify, second input is length of interface region. It is calcualte based on length of hydrophibic thickness you specify (in this example interface region on each side will be ~5A on each side of barrel (40x0.25=10A total)
 
 apptainer run --nv ~ENV_DIR/modulus_latest.sif \
 python ~/TMB_pipeline/TMB_MPNN/TMB_MPNN_code/v2.1.1/run.py \
