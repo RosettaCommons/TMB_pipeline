@@ -1,13 +1,10 @@
-
-message: "If you use this software, please cite it as below."
-title: "TMB_pipeline"
-
-url: "https://github.com/baker-laboratory/TMB_pipeline"
-
-authors:
-  - family-names: "Philomin"
-    given-names: "Annika"
-  - family-names: "Sonigra"
-    given-names: "Ria"
-  - family-names: "Majumder"
-    given-names: "Sagardip"
+preferred-citation:
+  type: software
+  title: "TMB_pipeline"
+  authors:
+    - family-names: "Philomin"
+      given-names: "Annika"
+    - family-names: "Sonigra"
+      given-names: "Ria"
+    - family-names: "Majumder"
+      given-names: "Sagardip"
