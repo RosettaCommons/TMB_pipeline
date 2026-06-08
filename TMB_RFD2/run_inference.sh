@@ -1,7 +1,8 @@
 #!/bin/bash
-
+# after setting your parameters run this script by:
+# singularity exec ../../ENV_DIR/sif/modulus_latest.sif bash run_inference.sh
 # Set the PYTHONPATH environment variable
-export PYTHONPATH=/home/aphilo/TMB_pipeline/TMB_RFD2:$PYTHONPATH
+export PYTHONPATH=./TMB_pipeline/TMB_RFD2:$PYTHONPATH
 
 # Lists of parameters for adjacency and secondary structure generation
 # Define a mapping of number of strands to average number of residues per strand
