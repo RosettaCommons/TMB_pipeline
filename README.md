@@ -37,14 +37,17 @@ Navigate to the weights directory, download checkpoints, and set environment var
 
 cd $WEIGHTS_DIR
 
-### RFD2 checkpoint (backbone generation)
-curl -O https://files.ipd.uw.edu/pub/TMB_pipeline/TMB_RFD2/RFD_TMBB_bulges_twists_masked_withPDB__10.pt
+### TMB_RFD2 checkpoint (standard backbone generation)
+curl -O https://files.ipd.uw.edu/pub/TMB_pipeline/TMB_RFD2/TMB_RFD2.pt
 
-### MPNN checkpoint (standard sequence design)
-curl -O https://files.ipd.uw.edu/pub/TMB_pipeline/TMB_MPNN/nosmoothmask_surfcond.pth
+### TMB_RFD2 checkpoint (for motif scaffolding)
+curl -O https://files.ipd.uw.edu/pub/TMB_pipeline/TMB_RFD2/TMB_RFD2_motif_scaffolding.pt
 
-### MPNN checkpoint (conditioned on hydrophobic thickness model)
-curl -O https://files.ipd.uw.edu/pub/TMB_pipeline/TMB_MPNN/p_Condition_20250507-dc3e3bb8.pth
+### TMB_MPNN checkpoint (standard sequence design)
+curl -O https://files.ipd.uw.edu/pub/TMB_pipeline/TMB_MPNN/TMB_MPNN.pth
+
+### TMB_MPNN checkpoint (for tuning hydrophobic thickness)
+curl -O https://files.ipd.uw.edu/pub/TMB_pipeline/TMB_MPNN/TMB_MPNN_tuning_hydrophobic_thickness.pth
 
 ### Set environment variables
 export RFD2_CKPT_PATH=$WEIGHTS_DIR/RFD_TMBB_bulges_twists_masked_withPDB__10.pt
