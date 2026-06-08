@@ -50,9 +50,10 @@ curl -O https://files.ipd.uw.edu/pub/TMB_pipeline/TMB_MPNN/TMB_MPNN.pth
 curl -O https://files.ipd.uw.edu/pub/TMB_pipeline/TMB_MPNN/TMB_MPNN_tuning_hydrophobic_thickness.pth
 
 ### Set environment variables
-export RFD2_CKPT_PATH=$WEIGHTS_DIR/RFD_TMBB_bulges_twists_masked_withPDB__10.pt
-export MPNN_CKPT_PATH=$WEIGHTS_DIR/nosmoothmask_surfcond.pth
-export MPNN_COND_CKPT_PATH=$WEIGHTS_DIR/p_Condition_20250507-dc3e3bb8.pth
+export TMB_RFD2_CKPT_PATH=$WEIGHTS_DIR/TMB_RFD2.pt
+export TMB_RFD2_MOTIF_SCAFFOLDING_CKPT_PATH=$WEIGHTS_DIR/TMB_RFD2_motif_scaffolding.pt
+export TMB_MPNN_CKPT_PATH=$WEIGHTS_DIR/TMB_MPNN.pth
+export TMB_MPNN_COND_CKPT_PATH=$WEIGHTS_DIR/TMB_MPNN_tuning_hydrophobic_thickness.pth
 
 ---
 
@@ -63,6 +64,7 @@ Download the container and set its path.
 cd $ENV_DIR
 
 curl -O https://files.ipd.uw.edu/pub/TMB_pipeline/sif_file/modulus_latest.sif
+curl -O https://files.ipd.uw.edu/pub/TMB_pipeline/sif_file/TMB_RFD2.sif
 
 ### Set container path
 export APPTAINER_PATH=$ENV_DIR/modulus_latest.sif
