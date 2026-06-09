@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # Run from the TMB_RFD2 directory with:
-# singularity exec ../environments/modulus_latest.sif bash make_diffusion_commands.sh
+# apptainer exec "$MODULUS_APPTAINER_PATH" bash make_diffusion_commands.sh
+#
+# Or, if paths are not exported:
+# apptainer exec ../environments/modulus_latest.sif bash make_diffusion_commands.sh
 #
 # Then run diffusion separately from the host with:
 # bash inference_commands.txt
@@ -46,8 +49,8 @@ WEIGHTS_DIR="${WEIGHTS_DIR:-${TMB_PIPELINE_DIR}/weights}"
 ENV_DIR="${ENV_DIR:-${TMB_PIPELINE_DIR}/environments}"
 
 # Containers
-MODULUS_SIF="${ENV_DIR}/modulus_latest.sif"
-DIFFUSION_SIF="${ENV_DIR}/TMB_RFD2.sif"
+MODULUS_SIF="${MODULUS_APPTAINER_PATH:-${ENV_DIR}/modulus_latest.sif}"
+DIFFUSION_SIF="${TMB_RFD2_APPTAINER_PATH:-${ENV_DIR}/TMB_RFD2.sif}"
 
 # Python path for local RFdiffusion code
 export PYTHONPATH="${RF_CODE_DIR}:${PYTHONPATH}"
