@@ -23,7 +23,7 @@ This section is not strictly required, but the example commands below use these 
 mkdir -p weights environments
 export TMB_PIPELINE_DIR="$PWD"
 export WEIGHTS_DIR="$TMB_PIPELINE_DIR/weights"
-export ENV_DIR="$TMB_PIPELINE_DIR/exec"
+export ENV_DIR="$TMB_PIPELINE_DIR/environments"
 
 ---
 
