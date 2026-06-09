@@ -61,6 +61,7 @@ cd $ENV_DIR
 
 curl -O https://files.ipd.uw.edu/pub/TMB_pipeline/sif_file/modulus_latest.sif
 curl -O https://files.ipd.uw.edu/pub/TMB_pipeline/sif_file/TMB_RFD2.sif
+curl -O https://files.ipd.uw.edu/pub/TMB_pipeline/sif_file/TMB_MPNN.sif
 
 ### Set container path
 export APPTAINER_PATH=$ENV_DIR/modulus_latest.sif
