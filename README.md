@@ -20,9 +20,7 @@ This section is not strictly required, but the example commands below use these 
 
 ### Feel free to change directory names
 
-TMB_PIPELINE_DIR=/path/to/TMB_pipeline
-WEIGHTS_DIR=$TMB_PIPELINE_DIR/weights
-ENV_DIR=$TMB_PIPELINE_DIR/exec
+export TMB_PIPELINE_DIR="$PWD" WEIGHTS_DIR="$TMB_PIPELINE_DIR/weights" ENV_DIR="$TMB_PIPELINE_DIR/exec" && mkdir -p "$WEIGHTS_DIR" "$ENV_DIR"
 
 ### Create directories
 mkdir -p $TMB_PIPELINE_DIR
