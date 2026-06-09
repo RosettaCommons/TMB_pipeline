@@ -1,0 +1,3 @@
+[2026-06-08 17:55:54,618][rf_diffusion.inference.symmetry][INFO] - Initializing cyclic symmetry order 1.
+[2026-06-08 17:55:54,643][__main__][INFO] - Making design /home/aphilo/TMB_pipeline/TMB_RFD2/motif_scaffolding_example/./motif_diffusion_outputs/N10_nres16_sampled_pose_alnZ_motif_des17_GP_glytwists_2_7_0
+[2026-06-08 17:56:03,993][rf_diffusion.inference.symmetry][INFO] - Initializing cyclic symmetry order 1.

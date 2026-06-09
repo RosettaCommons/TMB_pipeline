@@ -1,0 +1,8 @@
+[2026-06-08 17:56:56,547][rf_diffusion.inference.symmetry][INFO] - Initializing cyclic symmetry order 1.
+[2026-06-08 17:56:56,572][__main__][INFO] - Making design /home/aphilo/TMB_pipeline/TMB_RFD2/motif_scaffolding_example/./motif_diffusion_outputs/N10_nres16_sampled_pose_alnZ_motif_des1_GP_glytwists_2_7_0
+[2026-06-08 17:57:05,994][rf_diffusion.inference.symmetry][INFO] - Initializing cyclic symmetry order 1.
+[2026-06-08 17:57:06,653][se3_flow_matching.data.so3_utils][INFO] - Data loaded from .cache/cache_igso3_s0.100-1.500-1000_l1000_o1000-3.npz
+[2026-06-08 17:57:06,725][rf_diffusion.inference.model_runners][INFO] - Denoising t=tensor(50)
+[2026-06-08 17:57:10,420][rf_diffusion.inference.model_runners][INFO] - Denoising t=tensor(49)
+[2026-06-08 17:57:12,159][rf_diffusion.inference.model_runners][INFO] - Denoising t=tensor(48)
+[2026-06-08 17:57:13,851][rf_diffusion.inference.model_runners][INFO] - Denoising t=tensor(47)

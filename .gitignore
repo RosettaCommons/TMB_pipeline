@@ -1,0 +1,4 @@
+*.sif
+weights/
+environments/
+

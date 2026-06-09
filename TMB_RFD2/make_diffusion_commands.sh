@@ -1,29 +1,31 @@
 #!/bin/bash
 
 # Run from the TMB_RFD2 directory with:
-# singularity exec ../../ENV_DIR/modulus_latest.sif bash make_diffusion_commands.sh
+# singularity exec ../environments/modulus_latest.sif bash make_diffusion_commands.sh
 #
 # Then run diffusion separately from the host with:
 # bash inference_commands.txt
 #
 # Expected directory layout:
-# parent_dir/
-# ├── TMB_pipeline/
-# │   └── TMB_RFD2/
-# │       ├── run_inference.sh
-# │       ├── adj_ss_wrapper_glytwist.py
-# │       ├── dummy.pdb
-# │       └── TMB_RFD2_code/
-# │           └── rf_diffusion/
-# ├── WEIGHTS_DIR/
-# │   └── RFD_TMBB_bulges_twists_masked_withPDB__10.pt
-# └── ENV_DIR/
+# TMB_pipeline/
+# ├── TMB_RFD2/
+# │   ├── make_diffusion_commands.sh
+# │   ├── run_inference.sh
+# │   ├── adj_ss_wrapper_glytwist.py
+# │   ├── dummy.pdb
+# │   └── TMB_RFD2_code/
+# │       └── rf_diffusion/
+# ├── weights/
+# │   └── TMB_RFD2.pt
+# └── environments/
 #     ├── modulus_latest.sif
-#     └── bakerlab_rf_diffusion_aa.sif
+#     └── TMB_RFD2.sif
 
 set -e
 
+############################################
 # Paths
+############################################
 
 # Directory where this script lives
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -31,29 +33,29 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # TMB_RFD2 directory
 REPO_ROOT="$SCRIPT_DIR"
 
+# TMB_pipeline directory
+TMB_PIPELINE_DIR="$(cd "${REPO_ROOT}/.." && pwd)"
+
 # Code directory containing rf_diffusion/
 RF_CODE_DIR="${REPO_ROOT}/TMB_RFD2_code"
 
-# Parent directory containing TMB_pipeline, WEIGHTS_DIR, and ENV_DIR
-PROJECT_PARENT="$(cd "${REPO_ROOT}/../.." && pwd)"
-
 # Default locations, override if needed:
-# export WEIGHTS_DIR=/path/to/WEIGHTS_DIR
-# export ENV_DIR=/path/to/ENV_DIR
-WEIGHTS_DIR="${WEIGHTS_DIR:-${PROJECT_PARENT}/WEIGHTS_DIR}"
-ENV_DIR="${ENV_DIR:-${PROJECT_PARENT}/ENV_DIR}"
+# export WEIGHTS_DIR=/path/to/weights
+# export ENV_DIR=/path/to/environments
+WEIGHTS_DIR="${WEIGHTS_DIR:-${TMB_PIPELINE_DIR}/weights}"
+ENV_DIR="${ENV_DIR:-${TMB_PIPELINE_DIR}/environments}"
 
 # Containers
 MODULUS_SIF="${ENV_DIR}/modulus_latest.sif"
-DIFFUSION_SIF="${ENV_DIR}/bakerlab_rf_diffusion_aa.sif"
+DIFFUSION_SIF="${ENV_DIR}/TMB_RFD2.sif"
 
 # Python path for local RFdiffusion code
 export PYTHONPATH="${RF_CODE_DIR}:${PYTHONPATH}"
 
 echo "SCRIPT_DIR: $SCRIPT_DIR"
 echo "REPO_ROOT: $REPO_ROOT"
+echo "TMB_PIPELINE_DIR: $TMB_PIPELINE_DIR"
 echo "RF_CODE_DIR: $RF_CODE_DIR"
-echo "PROJECT_PARENT: $PROJECT_PARENT"
 echo "WEIGHTS_DIR: $WEIGHTS_DIR"
 echo "ENV_DIR: $ENV_DIR"
 echo "MODULUS_SIF: $MODULUS_SIF"
@@ -69,22 +71,30 @@ if [ ! -d "$RF_CODE_DIR/rf_diffusion" ]; then
     exit 1
 fi
 
+if [ ! -f "$MODULUS_SIF" ]; then
+    echo "Error: modulus SIF not found:"
+    echo "$MODULUS_SIF"
+    exit 1
+fi
+
 if [ ! -f "$DIFFUSION_SIF" ]; then
     echo "Error: diffusion SIF not found:"
     echo "$DIFFUSION_SIF"
     exit 1
 fi
 
-
+############################################
 # User parameters
+############################################
 
 declare -A n_strands_residues_map
+
 # n_strands_residues_map[10]="16"
 # n_strands_residues_map[12]="16"
 n_strands_residues_map[14]="16"
 # n_strands_residues_map[16]="16"
 
-# Wrapper script for generating 
+# Wrapper script for generating adjacency/SS/glycine twist files
 adj_ss_wrapper_script="${REPO_ROOT}/adj_ss_wrapper_glytwist.py"
 
 if [ ! -f "$adj_ss_wrapper_script" ]; then
@@ -93,9 +103,12 @@ if [ ! -f "$adj_ss_wrapper_script" ]; then
     exit 1
 fi
 
+############################################
 # Checkpoint models
+############################################
+
 models=(
-    "${WEIGHTS_DIR}/RFD_TMBB_bulges_twists_masked_withPDB__10.pt"
+    "${WEIGHTS_DIR}/TMB_RFD2.pt"
 )
 
 for model_ckpt in "${models[@]}"; do
@@ -108,7 +121,10 @@ for model_ckpt in "${models[@]}"; do
     fi
 done
 
+############################################
 # Static parameters for inference
+############################################
+
 config_name="aa_ppi"
 has_termini="[True]"
 contigs="['1-1']"
@@ -126,7 +142,9 @@ fi
 output_file="${REPO_ROOT}/inference_commands.txt"
 > "$output_file"
 
+############################################
 # Glycine twist combinations
+############################################
 
 declare -A glycine_twist_map
 
@@ -136,11 +154,15 @@ glycine_twist_map[14]="2 7"
 # Broader sampling example:
 # glycine_twist_map[14]="1 2 3 4; 1 2 4 5; 1 2 5 6; 1 2 6 7; 1 2 7 8; 1 2 8 9; 1 2 9 10; 1 2 10 11; 1 2 11 12; 1 2 12 13; 1 2 13 14; 2 3 4 5; 2 3 5 6; 2 3 6 7; 2 3 7 8; 2 3 8 9; 2 3 9 10; 2 3 10 11; 2 3 11 12; 2 3 12 13; 2 3 13 14; 3 4 5 6; 3 4 6 7; 3 4 7 8; 3 4 8 9; 3 4 9 10; 3 4 10 11; 3 4 11 12; 3 4 12 13; 3 4 13 14; 4 5 6 7; 4 5 7 8; 4 5 8 9; 4 5 9 10; 4 5 10 11; 4 5 11 12; 4 5 12 13; 4 5 13 14; 5 6 7 8; 5 6 8 9; 5 6 9 10; 5 6 10 11; 5 6 11 12; 5 6 12 13; 5 6 13 14; 6 7 8 9; 6 7 9 10; 6 7 10 11; 6 7 11 12; 6 7 12 13; 6 7 13 14; 7 8 9 10; 7 8 10 11; 7 8 11 12; 7 8 12 13; 7 8 13 14; 8 9 10 11; 8 9 11 12; 8 9 12 13; 8 9 13 14; 9 10 11 12; 9 10 12 13; 9 10 13 14; 10 11 12 13; 10 11 13 14; 11 12 13 14"
 
+############################################
 # Move into repo root
+############################################
 
 cd "$REPO_ROOT"
 
+############################################
 # Generate adj/ss/glytwist files and inference_commands.txt
+############################################
 
 for n_strands in "${!n_strands_residues_map[@]}"; do
     IFS=' ' read -ra residues_per_strand_list <<< "${n_strands_residues_map[$n_strands]}"
@@ -159,8 +181,10 @@ for n_strands in "${!n_strands_residues_map[@]}"; do
 
             # Generate glycine twist residue indices
             twist_residues=()
+
             for strand in $glycine_twists; do
                 start=$(( (strand - 1) * residues_per_strand + residues_per_strand / 2 - 2 ))
+
                 for offset in {0..4}; do
                     twist_residues+=($((start + offset)))
                 done
