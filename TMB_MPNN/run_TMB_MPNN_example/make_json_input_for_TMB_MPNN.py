@@ -8,6 +8,11 @@ import numpy as np
 from scipy.linalg import expm
 from Bio.PDB import *
 
+# this script generates json files that you will later feed into mpnn for TMB sequence design
+# how to run:
+# run on directory "./backbones" that contain the pdb files of your backbones:
+# python make_json_input_for_TMB_MPNN.py 100 0.25 ./backbones/*.pdb
+
 pdbdict = {}
 intf_buried_dict = {}
 out_file_pdb = "./pdbs_multi_json.jsonl"

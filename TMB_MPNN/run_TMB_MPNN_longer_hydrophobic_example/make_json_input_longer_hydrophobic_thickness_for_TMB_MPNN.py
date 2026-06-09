@@ -1,18 +1,17 @@
-#!/~ENV_DIR/modulus_latest.sif
 import sys
 import json
 from pathlib import Path
+
 import numpy
 import numpy as np
 from Bio.PDB import PDBParser
 
+
 pdbdict = {}
 intf_buried_dict = {}
+
 out_file_pdb = "./pdbs_multi_json.jsonl"
 out_file_intf_buried = "./intf_buried.jsonl"
-
-# scale factor to enhance the length of axis in Pymol
-scale_factor = 20
 
 
 def scale_func(x):
@@ -26,6 +25,7 @@ def scale_func(x):
 def mod_coords(coords):
     factor = []
     norm = numpy.linalg.norm(coords, axis=1)
+
     for r in norm:
         factor.append(scale_func(r))
 
@@ -34,22 +34,32 @@ def mod_coords(coords):
 
 
 def make_rotmat(vec):
-    # Calculate the cross product and dot product of the input and target vectors
-    cross_product = numpy.cross(vec, numpy.array([0, 0, 1]))
-    dot_product = numpy.dot(vec, numpy.array([0, 0, 1]))
+    """
+    Make rotation matrix that aligns vec to the z-axis.
+    """
+    target = numpy.array([0, 0, 1])
 
-    # Handle the rare case where vec is exactly opposite to z-axis
+    cross_product = numpy.cross(vec, target)
+    dot_product = numpy.dot(vec, target)
+
+    # If vec is already aligned to z-axis
+    if numpy.isclose(dot_product, 1.0):
+        return numpy.identity(3)
+
+    # If vec is opposite to z-axis
     if numpy.isclose(dot_product, -1.0):
-        return numpy.array([[-1, 0, 0], [0, 1, 0], [0, 0, -1]])
+        return numpy.array([
+            [-1, 0, 0],
+            [0, 1, 0],
+            [0, 0, -1],
+        ])
 
-    # Calculate the skew-symmetric matrix
     skew_matrix = numpy.array([
         [0, -cross_product[2], cross_product[1]],
         [cross_product[2], 0, -cross_product[0]],
-        [-cross_product[1], cross_product[0], 0]
+        [-cross_product[1], cross_product[0], 0],
     ])
 
-    # Calculate the rotation matrix
     rotation_matrix = (
         numpy.identity(3)
         + skew_matrix
@@ -60,158 +70,166 @@ def make_rotmat(vec):
 
 
 def invert_pdb(coord1, coord2, coord3):
-    rotmat = numpy.array([[-1, 0, 0], [0, 1, 0], [0, 0, -1]])
+    """
+    Flip barrel orientation.
+    """
+    rotmat = numpy.array([
+        [-1, 0, 0],
+        [0, 1, 0],
+        [0, 0, -1],
+    ])
+
     coord1 = numpy.dot(coord1, rotmat.T)
     coord2 = numpy.dot(coord2, rotmat.T)
     coord3 = numpy.dot(coord3, rotmat.T)
+
     return coord1, coord2, coord3
 
 
 def read_pdb_coord(pdb_name):
     """
-    Reads atomic coordinates of C-alpha, N, and C atoms from a .pdb file.
-
-    Parameters
-    ----------
-    pdb_name : str
-        Name of pdb file.
-
-    Returns
-    -------
-    tuple
-        CA, N, C, all-atom coordinates, and structure object
+    Read CA, N, C, and all-atom coordinates from a PDB.
     """
-    p = PDBParser(QUIET=True)
-    st = p.get_structure("pdb", pdb_name)
+    parser = PDBParser(QUIET=True)
+    structure = parser.get_structure("pdb", pdb_name)
 
-    coordinates = []
-    N_coords = []
-    C_coords = []
-    ca = []
+    ca_coords = []
+    n_coords = []
+    c_coords = []
+    all_coords = []
 
-    for model in st:
+    for model in structure:
         for chain in model:
             for residue in chain:
                 if residue.has_id("CA"):
-                    ca.append(residue["CA"].coord)
+                    ca_coords.append(residue["CA"].coord)
                 if residue.has_id("N"):
-                    N_coords.append(residue["N"].coord)
+                    n_coords.append(residue["N"].coord)
                 if residue.has_id("C"):
-                    C_coords.append(residue["C"].coord)
+                    c_coords.append(residue["C"].coord)
+
                 for atom in residue:
-                    coordinates.append(atom.coord)
+                    all_coords.append(atom.coord)
 
     return (
-        numpy.array(ca),
-        numpy.array(N_coords),
-        numpy.array(C_coords),
-        numpy.array(coordinates),
-        st,
+        numpy.array(ca_coords),
+        numpy.array(n_coords),
+        numpy.array(c_coords),
+        numpy.array(all_coords),
+        structure,
     )
 
 
-def get_intf_buried_resi(coords, TMdepth, interf_frac):
+def get_intf_buried_resi(coords, tmdepth, interf_frac):
     """
-    Label residues by membrane position only.
+    Assign hydrophobic-thickness conditioning labels.
 
     Token mapping:
-      0 = outside labeled TMD region
       1 = interface
       2 = buried
 
-    Notes
-    -----
-    This follows the original script's z-axis logic, but removes all
-    pore-facing vs surface-facing filtering.
+    No pore-facing/surface-facing filtering.
+    No 0 token.
     """
-    maxZ = numpy.max(coords, axis=0)[2]
-    minZ = numpy.min(coords, axis=0)[2]
+    max_z = numpy.max(coords, axis=0)[2]
+    min_z = numpy.min(coords, axis=0)[2]
+    span = max_z - min_z
 
-    span = maxZ - minZ
-
-    # Original behavior: if structure is taller than TMdepth,
-    # keep only residues within minZ to minZ + TMdepth
-    if span > TMdepth:
+    # If structure is taller than tmdepth, use only min_z to min_z + tmdepth
+    if span > tmdepth:
         resi_tmd_1based = 1 + numpy.nonzero(
-            numpy.where(coords[:, 2] < minZ + TMdepth, coords[:, 2], 0)
+            numpy.where(coords[:, 2] < min_z + tmdepth, coords[:, 2], 0)
         )[0]
         resi_tmd_1based = numpy.array(resi_tmd_1based)
 
         if len(resi_tmd_1based) == 0:
-            return [0.0] * len(coords)
+            # fallback: everything interface
+            return [1.0] * len(coords)
 
-        maxZ = numpy.max(coords[resi_tmd_1based - 1, 2])
-        span = maxZ - minZ
+        max_z = numpy.max(coords[resi_tmd_1based - 1, 2])
+        span = max_z - min_z
     else:
         resi_tmd_1based = numpy.array(list(range(1, len(coords) + 1)))
 
-    intf = (span * interf_frac) / 2.0
+    interface_width = (span * interf_frac) / 2.0
 
-    # Keep original interface logic
+    # Bottom interface
     intf1_tmd_0based = [
         x for x in numpy.where(
-            coords[resi_tmd_1based - 1, 2] <= minZ + 2.0 * intf,
+            coords[resi_tmd_1based - 1, 2] <= min_z + 2.0 * interface_width,
             resi_tmd_1based - 1,
-            -1
-        )[0]
+            -1,
+        )
         if x != -1
     ]
 
+    # Top interface
     intf2_tmd_0based = [
         x for x in numpy.where(
-            coords[resi_tmd_1based - 1, 2] >= maxZ - intf,
+            coords[resi_tmd_1based - 1, 2] >= max_z - interface_width,
             resi_tmd_1based - 1,
-            -1
-        )[0]
+            -1,
+        )
         if x != -1
     ]
 
     intf_tmd_0based = sorted(set(intf1_tmd_0based + intf2_tmd_0based))
 
     if len(intf_tmd_0based) == 0:
-        return [0.0] * len(coords)
+        # fallback: everything interface
+        return [1.0] * len(coords)
 
     intf_coord = numpy.array([coords[i] for i in intf_tmd_0based])
-    maxZ_intf = numpy.max(intf_coord, axis=0)[2]
+    max_z_intf = numpy.max(intf_coord, axis=0)[2]
 
     buriedtmd_0based = [
         x for x in numpy.where(
-            coords[resi_tmd_1based - 1, 2] < maxZ_intf,
+            coords[resi_tmd_1based - 1, 2] < max_z_intf,
             resi_tmd_1based - 1,
-            -1
-        )[0]
+            -1,
+        )
         if x != -1 and x not in intf_tmd_0based
     ]
 
-    labels = numpy.zeros(len(coords), dtype=float)
-    labels[intf_tmd_0based] = 1.0
+    # Hydrophobic thickness version:
+    # default everything to interface = 1
+    # then set buried residues to 2
+    labels = numpy.ones(len(coords), dtype=float)
     labels[buriedtmd_0based] = 2.0
 
     return list(labels)
+
+
+if len(sys.argv) < 4:
+    print(
+        "Usage: python make_json_input_longer_hydrophobic_thickness_for_TMB_MPNN.py "
+        "<tmdepth> <interf_frac> <pdb1> [pdb2 ...]"
+    )
+    sys.exit(1)
 
 
 tmdepth = float(sys.argv[1])
 interf_frac = float(sys.argv[2])
 
 for pdb_name in sys.argv[3:]:
-    pdbPath = Path(pdb_name)
-    pdbpath = pdbPath.resolve()
-    pdbdict[f"{pdbpath}"] = []
+    pdb_path = Path(pdb_name).resolve()
 
-    # read pdb
-    coord_ca, coord_n, coord_c, allcoord, pdbst = read_pdb_coord(pdb_name)
+    pdbdict[f"{pdb_path}"] = []
 
-    # compute geometric center
+    coord_ca, coord_n, coord_c, allcoord, pdb_structure = read_pdb_coord(pdb_name)
+
+    if len(coord_ca) == 0:
+        print(f"Warning: no CA atoms found in {pdb_name}. Skipping.")
+        continue
+
     center = numpy.mean(allcoord, axis=0)
 
-    # center with geometric center
+    # Use modified CA coordinates for principal-axis calculation
     coord = mod_coords(coord_ca - center)
 
-    # compute principal axis matrix
     inertia = numpy.dot(coord.transpose(), coord)
     e_values, e_vectors = numpy.linalg.eig(inertia)
 
-    # order eigen values and eigen vectors
     order = numpy.argsort(e_values)
     eval3, eval2, eval1 = e_values[order]
     axis3, axis2, axis1 = e_vectors[:, order].transpose()
@@ -224,15 +242,23 @@ for pdb_name in sys.argv[3:]:
 
     if moved_coord_ca[0][2] > 0.0:
         moved_coord_ca, moved_coord_c, moved_coord_n = invert_pdb(
-            moved_coord_ca, moved_coord_c, moved_coord_n
+            moved_coord_ca,
+            moved_coord_c,
+            moved_coord_n,
         )
 
-    intf_buried_dict[f"{pdbpath}"] = get_intf_buried_resi(
-        moved_coord_ca, tmdepth, interf_frac
+    intf_buried_dict[f"{pdb_path}"] = get_intf_buried_resi(
+        moved_coord_ca,
+        tmdepth,
+        interf_frac,
     )
+
 
 with open(out_file_pdb, "w") as fout:
     json.dump(pdbdict, fout)
 
 with open(out_file_intf_buried, "w") as fout:
     json.dump(intf_buried_dict, fout)
+
+print(f"Wrote {out_file_pdb}")
+print(f"Wrote {out_file_intf_buried}")
