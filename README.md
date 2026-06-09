@@ -1,6 +1,6 @@
 # TMB_pipeline
 
-This repository contains code for running a generative pipeline for transmembrane β-barrel (TMB) design. It includes scripts demonstrating how to use TMB_RFD2 for backbone generation and TMB_MPNN for sequence design, as well as notebooks describing the curation and filtering of the distillation set used for training.
+This repository contains code for running a generative pipeline for transmembrane β barrel (TMB) design. It includes scripts demonstrating how to use TMB_RFD2 for backbone generation and TMB_MPNN for sequence design, as well as notebooks describing the curation and filtering of the distillation set used for training.
 
 ---
 
