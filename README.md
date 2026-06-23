@@ -129,8 +129,6 @@ ls "$TMB_RFD2_APPTAINER_PATH"
 ls "$TMB_MPNN_APPTAINER_PATH"
 ```
 
----
-
 ## 6. Re-export paths in a new terminal session
 
 Environment variables are not permanent unless added to your shell startup file. If you open a new terminal session, rerun:
@@ -151,6 +149,21 @@ export MODULUS_APPTAINER_PATH="$ENV_DIR/modulus_latest.sif"
 export TMB_RFD2_APPTAINER_PATH="$ENV_DIR/TMB_RFD2.sif"
 export TMB_MPNN_APPTAINER_PATH="$ENV_DIR/TMB_MPNN.sif"
 ```
+
+---
+
+---
+
+## Distillation set notebook
+
+The notebook at [Distillation_set_curation/distillation_set.ipynb](Distillation_set_curation/distillation_set.ipynb) loads the distillation-set silent file from:
+
+- [Distillation_set_curation/distillation_set.silent](Distillation_set_curation/distillation_set.silent) by default, or
+- the path provided by the `DISTILLATION_SILENT_PATH` environment variable.
+
+The silent file is large, so it is intentionally excluded from git. Keep a local copy in the path above, or point the environment variable at your own copy before running the notebook.
+
+This notebook also expects a PyRosetta-enabled environment. It adds [TMB_RFD2/TMB_RFD2_code](TMB_RFD2/TMB_RFD2_code) to `sys.path` automatically so it can reuse the repository's shared silent-file reader.
 
 ---
 

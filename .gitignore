@@ -1,4 +1,5 @@
 *.sif
 weights/
 environments/
+Distillation_set_curation/distillation_set.silent
 
